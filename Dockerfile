@@ -26,9 +26,9 @@ FROM ghcr.io/openim-sigs/openim-ubuntu-image:latest
 
 WORKDIR ${SERVER_WORKDIR}
 
-# Copy scripts and binary files to the production image
+# Copy scripts, config, and binary files to the production image
 COPY --from=builder ${OPENIM_SERVER_BINDIR} /openim/openim-server/_output/bin
-# COPY --from=builder ${OPENIM_SERVER_CMDDIR} /openim/openim-server/scripts
-# COPY --from=builder ${SERVER_WORKDIR}/config /openim/openim-server/config
+COPY --from=builder /openim/openim-server/scripts /openim/openim-server/scripts
+COPY --from=builder /openim/openim-server/config /openim/openim-server/config
 
-CMD ["/openim/openim-server/scripts/docker-start-all.sh"]
+CMD ["/bin/bash", "/openim/openim-server/scripts/docker-start-all.sh"]
