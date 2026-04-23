@@ -11,6 +11,9 @@ ENV GOPROXY=$GOPROXY
 WORKDIR /openim/openim-server
 
 COPY go.mod go.sum ./
+# go.mod contains: replace github.com/OpenIMSDK/protocol => ./pkg/protocol
+# The replaced local module must exist before `go mod download`.
+COPY pkg/protocol ./pkg/protocol
 RUN go mod download
 
 # Copy all files to the container
