@@ -45,4 +45,7 @@ COPY --from=builder ${CHAT_WORKDIR}/config /openim/openim-chat/config
 COPY --from=builder ${CHAT_WORKDIR}/scripts /openim/openim-chat/scripts
 COPY --from=builder ${CHAT_WORKDIR}/deployments /openim/openim-chat/deployments
 
-CMD ["/openim/openim-chat/scripts/docker_start_all.sh"]
+# Ensure shell scripts are executable (Windows checkouts don't preserve +x)
+RUN find /openim/openim-chat/scripts -type f -name "*.sh" -exec chmod +x {} \;
+
+CMD ["/bin/bash", "/openim/openim-chat/scripts/docker_start_all.sh"]
