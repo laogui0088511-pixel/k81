@@ -1,0 +1,117 @@
+# K8s deployment for openim-server on DigitalOcean Kubernetes
+# -----------------------------------------------------------
+# Prereqs (run once):
+#   1) doctl registry login
+#   2) doctl registry kubernetes-manifest --namespace default | kubectl apply -f -
+#      (creates Secret "registry-op1" used below under imagePullSecrets)
+#   3) kubectl apply -f deployments/k8s/openim-server.yaml
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openim
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openim-config
+  namespace: openim
+data:
+  # Mount this into /openim/openim-server/config/config.yaml.
+  # Fill in real values (mongo/redis/kafka addrs etc.) before applying.
+  config.yaml: |
+    # placeholder — replace with your real config/config.yaml content
+    serverversion: 3.5.0
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openim-server
+  namespace: openim
+  labels:
+    app: openim-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openim-server
+  template:
+    metadata:
+      labels:
+        app: openim-server
+    spec:
+      imagePullSecrets:
+        - name: registry-op1
+      containers:
+        - name: openim-server
+          image: registry.digitalocean.com/op1/openim-server:latest
+          imagePullPolicy: Always
+          ports:
+            - name: api
+              containerPort: 10002
+            - name: ws
+              containerPort: 10001
+          readinessProbe:
+            tcpSocket:
+              port: 10002
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: 10002
+            initialDelaySeconds: 90
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "2"
+              memory: "2Gi"
+          volumeMounts:
+            - name: config
+              mountPath: /openim/openim-server/config/config.yaml
+              subPath: config.yaml
+      volumes:
+        - name: config
+          configMap:
+            name: openim-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openim-server
+  namespace: openim
+spec:
+  type: ClusterIP
+  selector:
+    app: openim-server
+  ports:
+    - name: api
+      port: 10002
+      targetPort: api
+    - name: ws
+      port: 10001
+      targetPort: ws
+---
+# Optional: expose the API externally via DO load balancer.
+# Uncomment if you want a public IP.
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: openim-server-lb
+#   namespace: openim
+#   annotations:
+#     service.beta.kubernetes.io/do-loadbalancer-name: "openim-server"
+# spec:
+#   type: LoadBalancer
+#   selector:
+#     app: openim-server
+#   ports:
+#     - name: api
+#       port: 10002
+#       targetPort: api
+#     - name: ws
+#       port: 10001
+#       targetPort: ws

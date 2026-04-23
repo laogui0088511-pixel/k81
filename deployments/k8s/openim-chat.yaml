@@ -1,0 +1,89 @@
+# K8s deployment for openim-chat on DigitalOcean Kubernetes
+# ---------------------------------------------------------
+# Prereqs: same as openim-server.yaml
+#   1) doctl registry login
+#   2) doctl registry kubernetes-manifest --namespace openim | kubectl apply -f -
+#   3) kubectl apply -f deployments/k8s/openim-chat.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openim-chat-config
+  namespace: openim
+data:
+  # Mounted at /openim/openim-chat/config/config.yaml.
+  # Fill in real values before applying.
+  config.yaml: |
+    # placeholder — replace with your real chat config.yaml
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openim-chat
+  namespace: openim
+  labels:
+    app: openim-chat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openim-chat
+  template:
+    metadata:
+      labels:
+        app: openim-chat
+    spec:
+      imagePullSecrets:
+        - name: registry-op1
+      containers:
+        - name: openim-chat
+          image: registry.digitalocean.com/op1/openim-chat:latest
+          imagePullPolicy: Always
+          ports:
+            - name: chat-api
+              containerPort: 10008
+            - name: admin-api
+              containerPort: 10009
+          readinessProbe:
+            tcpSocket:
+              port: 10008
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: 10008
+            initialDelaySeconds: 90
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          volumeMounts:
+            - name: config
+              mountPath: /openim/openim-chat/config/config.yaml
+              subPath: config.yaml
+      volumes:
+        - name: config
+          configMap:
+            name: openim-chat-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openim-chat
+  namespace: openim
+spec:
+  type: ClusterIP
+  selector:
+    app: openim-chat
+  ports:
+    - name: chat-api
+      port: 10008
+      targetPort: chat-api
+    - name: admin-api
+      port: 10009
+      targetPort: admin-api
