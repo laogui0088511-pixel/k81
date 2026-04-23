@@ -302,8 +302,22 @@ openim::util::check_ports() {
     # Iterate over each given port.
     for port in "$@"; do
         # Use the `ss` command to find process information related to the given port.
-        local info=$(ss -ltnp | grep ":$port" || true)
-        
+        # Note: `ss` requires a working netlink socket, which may be unavailable
+        # inside restricted containers (error: "Cannot open netlink socket:
+        # Protocol not supported"). Suppress its stderr and fall back to a
+        # /dev/tcp probe below when needed.
+        local info=$(ss -ltnp 2>/dev/null | grep ":$port" || true)
+
+        # If `ss` gave no result, try a direct TCP probe on localhost. This
+        # works in containers without CAP_NET_ADMIN / netlink support.
+        if [[ -z $info ]]; then
+            if (exec 3<>/dev/tcp/127.0.0.1/$port) 2>/dev/null; then
+                exec 3<&- 3>&-
+                started+=("Port $port - Command: unknown (ss unavailable), PID: N/A, FD: N/A, Started: N/A")
+                continue
+            fi
+        fi
+
         # If there's no process information, it means the process associated with the port is not running.
         if [[ -z $info ]]; then
             not_started+=($port)
