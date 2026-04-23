@@ -147,7 +147,7 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
-      - GF_SERVER_ROOT_URL=http://admin.local/grafana/
+      - GF_SERVER_ROOT_URL=http://admin.nanxi8899.icu/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
     restart: always
     depends_on:

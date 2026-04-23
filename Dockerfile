@@ -33,6 +33,6 @@ COPY --from=builder /openim/openim-server/config /openim/openim-server/config
 
 # Ensure shell scripts are executable (Windows checkouts don't preserve +x)
 RUN find /openim/openim-server/scripts -type f -name "*.sh" -exec chmod +x {} \; \
- && chmod +x /openim/openim-server/_output/bin/platforms/*/* 2>/dev/null || true
+    && chmod +x /openim/openim-server/_output/bin/platforms/*/* 2>/dev/null || true
 
 CMD ["/bin/bash", "/openim/openim-server/scripts/docker-start-all.sh"]

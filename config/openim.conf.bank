@@ -40,10 +40,10 @@ upstream minio_console_2 {
     server 127.0.0.1:9090;
 }
 
-# 主服务器配置 - admin.local
+# 主服务器配置 - admin.nanxi8899.icu
 server {
     listen 80;
-    server_name admin.local;
+    server_name admin.nanxi8899.icu;
 
     client_max_body_size 100m;
 
@@ -100,7 +100,7 @@ server {
 
     # 根路径 - 返回简单提示页面
     location / {
-        return 200 'OpenIM Admin Portal\n\nAvailable services:\n- Grafana: http://admin.local/grafana/\n- API: http://admin.local/api/\n- Chat API: http://admin.local/chat/\n- Admin API: http://admin.local/complete_admin/\n';
+        return 200 'OpenIM Admin Portal\n\nAvailable services:\n- Grafana: http://admin.nanxi8899.icu/grafana/\n- API: http://admin.nanxi8899.icu/api/\n- Chat API: http://admin.nanxi8899.icu/chat/\n- Admin API: http://admin.nanxi8899.icu/complete_admin/\n';
         add_header Content-Type text/plain;
     }
 }
